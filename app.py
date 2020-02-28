@@ -77,24 +77,6 @@ def tokenize_text(s,max_len=75) :
                 words = words[max_len:]            
         tokenized_texts.append(words)
     return tokenized_texts
-
-##########################################################
-# Methods when user credentials are required
-# (maybe interact with LDAP?)
-##########################################################
-
-# auth = HTTPBasicAuth()
-
-# @auth.get_password
-# def get_password(username):
-#     if username == 'model':
-#         return 'model'
-#     return None
-
-# @auth.error_handler
-# def unauthorized():
-#     return make_response(jsonify( { 'error': 'Unauthorized access' } ), 403)
-#     # return 403 instead of 401 to prevent browsers from displaying the default auth dialog
     
 @app.errorhandler(400)
 def not_found(error):
@@ -106,50 +88,10 @@ def not_found(error):
 
 # This should probably be a MongoDB or something
 # to allow asynchronous reads/writes
-queue = {}
-
-###############################################
-
-# def sort_queue() :
-#     # Sort according to:
-#     # Priority: 1 (yes), 0 (no)
-#     # Timestamp
-#     pass
-
-# def tag_file(id) :
-#     task = queue[id]
-#     print(task)
-#     print("Counting down ...")
-#     for i in range(5) :
-#         print(i)
-#         time.sleep(1)
-
-#     # If successful, remove ID from task queue
-
-# # *** TODO: Add some scheduled tasks for querying for new files and resorting the queue ***
-# def process_next_file() :
-#     """ Process the next file in the queue """
-#     sort_queue()
-#     if len(queue)>0 :
-#         tag_file(list(queue)[0])
-
-###############################################        
+queue = {}      
 
 app = flask.Flask("bert_tagger")
 app.config["SCHEDULER_API_ENABLED"] = True
-
-# scheduler = APScheduler()
-# scheduler.init_app(app)
-# scheduler.start()
-
-# scheduler = BackgroundScheduler(daemon=True)
-# scheduler.add_job(process_next_file,'interval',seconds=5,max_instances=1)
-# # Want to add a job here to periodically refresh the queue with new files
-# # in the 
-# scheduler.start()
-
-# def test_job():
-#     print("test job run")
 
 #######################################
 # Methods to add or remove tasks
@@ -167,45 +109,6 @@ def create_task() :
     for mfield in ['user','study','path','priority','timestamp'] :
         if mfield not in task :
             abort(400, 'Task creation request missing field: %s'%(mfield))
-
-#     # Use hashing to create a unique ID
-#     id = hashlib.sha224(str("%s%s%s%s"%(task['user'],task['study'],task['path'],task['timestamp'])).encode()).hexdigest()
-
-#     # Parse the timestamp to allow for use in sorting later
-#     ts = dateparser.parse(task['timestamp'])   
-#     task['timestamp'] = ts
-
-#     queue[id] = task
-#     sort_queue()
-
-#     return jsonify( { 'result': True } ), 201
-
-#     # return jsonify( { 'task': make_public_task(task) } ), 201
-
-# @app.route('/get_queue', methods = ['GET'])
-# # @auth.login_required
-# def get_queue() :
-#     # task = filter(lambda t: t['id'] == task_id, tasks)
-#     # if len(task) == 0:
-#     #     abort(404)
-#     return jsonify( queue )
-
-# @app.route('/delete_task/<int:task_id>', methods = ['DELETE'])
-# # @auth.login_required
-# def delete_task(task_id) :
-#     # task = filter(lambda t: t['id'] == task_id, tasks)
-#     # if len(task) == 0:
-#     #     abort(404)
-#     # tasks.remove(task[0])
-#     return jsonify( { 'result': True } )
-
-# @app.route("/test")
-# def apscheduler_test() :
-#     print("Adding Job")
-#     scheduler.add_job(id="101",
-#                       func=test_job,
-#                       next_run_time=(datetime.now() + timedelta(seconds=10)))
-#     return "view", 200
 
 @app.route('/tag_sentence', methods = ['POST'])
 # @auth.login_required
@@ -231,12 +134,6 @@ def tag_sentence() :
 
     input_ids = pad_sequences([tokenizer.convert_tokens_to_ids(txt) for txt in tokenized_texts],
                             maxlen=MAX_LEN, dtype="long", truncating="post", padding="post")
-
-    # Not sure what the best option is for padding here
-    # attention masks get ignored during loss calculation anyway - maybe not an issue?
-    # tags = pad_sequences([[tag2idx.get(l) for l in lab] for lab in labels],
-    #                     maxlen=MAX_LEN, value=tag2idx["[PAD]"], padding="post",
-    #                     dtype="long", truncating="post")
 
     # Used to flag which terms are padding and which are real data
     attention_masks = [[float(i>0) for i in ii] for ii in input_ids]
@@ -272,10 +169,6 @@ def tag_sentence() :
         ret_json.append(res)
 
     return jsonify( { 'result': ret_json } )
-
-    # for mfield in ['user','study','path','priority','timestamp'] :
-    #     if mfield not in task :
-    #         abort(400, 'Task creation request missing field: %s'%(mfield))
 
 if __name__ == '__main__':
     app.run(port=5050)
