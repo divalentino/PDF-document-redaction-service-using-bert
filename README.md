@@ -11,7 +11,7 @@ python app.py
 Sentences can be sent e.g. from `curl` as follows,
 
 ```
-sentence="Warner told supporters outside of the University of Virginia Friday that he will not seek a sixth term in the 2008 elections ."
+sentence="Warner told supporters outside of the University of Virginia Friday that he will not seek a sixth term in the 2008 elections."
 curl localhost:5050/tag_sentence -d '{"sentence": "'"${sentence}"'"}' -H 'Content-Type: application/json'
 ```
 
