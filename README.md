@@ -1,6 +1,6 @@
 # flask-testing-BertForTokenClassification-transformers
 
-A simple Flask-based web app implementing huggingface's `BertForTokenClassification`, which receives a request containing a sentence (or string of sentences), and returns arrays of tokens with their associated BIO-formatted labels. Based off the approach taken here: https://www.depends-on-the-definition.com/named-entity-recognition-with-bert/
+A simple Flask-based web app implementing huggingface's `BertForTokenClassification`, which receives a request containing a sentence (or array of sentences), and returns arrays of tokens with their associated BIO-formatted labels. Based off the approach taken here: https://www.depends-on-the-definition.com/named-entity-recognition-with-bert/
 
 ## Usage
 
