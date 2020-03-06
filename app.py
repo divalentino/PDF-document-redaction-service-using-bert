@@ -133,11 +133,14 @@ def tag_sentence() :
     tts    = tokenize_text(sent)
 
     # Want to factor in batch size here
-    if len(tts)>bs :
-        nbatch = int(np.ceil(len(tts)/bs))
-        tts    = [tts[i:(i+bs)] for i in range(len(nbatch))]
+    ltts = len(tts)
+    if ltts>bs :
+        nbatch = int(np.ceil(ltts/bs))
+        tts    = [tts[(i*bs):((i+1)*bs)] for i in range(nbatch)]
     else : 
         tts = [tts]
+        
+    assert np.sum([len(itts) for itts in tts])==ltts
 
     ret_json = [] 
         
