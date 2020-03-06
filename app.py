@@ -175,7 +175,18 @@ def tag_sentence() :
                 res.append({
                     'token' : tokenized_texts[i][j],
                     'label' : idx2tag[y_pred[j]]
-                })        
+                })
+                
+            # Need to iterate backward and re-stitch fragments
+            # starting with ##
+            for_removal = []
+            for i in range(len(res)-1,-1,-1) :
+                if res[i]['token'].startswith("##") :
+                    res[i-1]['token'] += res[i]['token'][2:]
+                    for_removal.append(res[i])
+            for fr in for_removal :
+                res.remove(fr)
+
             ret_json.append(res)
 
     return jsonify( { 'result': ret_json } )
