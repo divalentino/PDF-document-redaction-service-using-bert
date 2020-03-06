@@ -129,46 +129,53 @@ def tag_sentence() :
 
     print(sent_json)
 
-    sent            = sent_json['sentence']
-    tokenized_texts = tokenize_text(sent)
+    sent   = sent_json['sentence']
+    tts    = tokenize_text(sent)
 
-    input_ids = pad_sequences([tokenizer.convert_tokens_to_ids(txt) for txt in tokenized_texts],
-                            maxlen=MAX_LEN, dtype="long", truncating="post", padding="post")
-
-    # Used to flag which terms are padding and which are real data
-    attention_masks = [[float(i>0) for i in ii] for ii in input_ids]
+    # Want to factor in batch size here
+    if len(tts)>bs :
+        nbatch = int(np.ceil(len(tts)/bs))
+        tts    = [tts[i:(i+bs)] for i in range(len(nbatch))]
+    else : 
+        tts = [tts]
 
     ret_json = [] 
-    for i in range(len(input_ids)) : 
-
-        input_id       = torch.tensor([torch.tensor(input_ids[i]).cpu().numpy()]).to(device)
-        attention_mask = torch.tensor([torch.tensor(attention_masks[i]).cpu().numpy()]).to(device)
         
-        outputs           = model(input_id, token_type_ids=None, attention_mask=attention_mask)
-        prediction_scores = outputs[0] # [:2]
-
-        ovar        = prediction_scores.cpu().detach().numpy()
-        pred_labels = np.array([np.argmax(ovar[0][j]) for j in range(len(ovar[0]))])  
-        noid_masks  = (input_ids[i]>0) # .detach().cpu().numpy()
-        y_pred      = pred_labels[noid_masks]
+    for tokenized_texts in tts : 
     
-        try : 
-            assert(len(y_pred)==len(tokenized_texts[i]))
-        except :
-            abort(400, 'Tokenized text length differs from predictions!')
+        input_ids = pad_sequences([tokenizer.convert_tokens_to_ids(txt) for txt in tokenized_texts],
+                                maxlen=MAX_LEN, dtype="long", truncating="post", padding="post")
 
-        res = [] # {'tokens':[],'labels':[]}
-        for j in range(len(y_pred)) :
-            res.append({
-                'token' : tokenized_texts[i][j],
-                'label' : idx2tag[y_pred[j]]
-            })
+        # Used to flag which terms are padding and which are real data
+        attention_masks = [[float(i>0) for i in ii] for ii in input_ids]
 
-        # Probably need to go back through and re-merge "##" terms here
+        input_id       = torch.tensor(input_ids).to(device)
+        attention_mask = torch.tensor(attention_masks).to(device)
 
-        ret_json.append(res)
+        outputs           = model(input_id, token_type_ids=None, attention_mask=attention_mask)
+        # prediction_scores = outputs[0] # [:2]
+
+        for i in range(len(input_ids)) : 
+            prediction_scores = outputs[0][i]
+            ovar              = prediction_scores.cpu().detach().numpy()
+            pred_labels       = np.array([np.argmax(ovar[j]) for j in range(len(ovar))])
+            noid_masks        = (input_ids[i]>0)
+            y_pred            = pred_labels[noid_masks]
+
+            try : 
+                assert(len(y_pred)==len(tokenized_texts[i]))
+            except :
+                raise Exception('Tokenized text length differs from predictions!')
+
+            res = [] # {'tokens':[],'labels':[]}
+            for j in range(len(y_pred)) :
+                res.append({
+                    'token' : tokenized_texts[i][j],
+                    'label' : idx2tag[y_pred[j]]
+                })        
+            ret_json.append(res)
 
     return jsonify( { 'result': ret_json } )
 
 if __name__ == '__main__':
-    app.run(port=5050)
+    app.run(port=5050,debug=True)
