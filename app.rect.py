@@ -156,8 +156,8 @@ def tag_sentence() :
         # Used to flag which terms are padding and which are real data
         attention_masks = [[float(i>0) for i in ii] for ii in input_ids]
 
-        input_id       = torch.tensor(input_ids).to(device)
-        attention_mask = torch.tensor(attention_masks).to(device)
+        input_id       = torch.tensor(input_ids).to(device).type(torch.LongTensor)
+        attention_mask = torch.tensor(attention_masks).to(device).type(torch.LongTensor)
 
         outputs           = model(input_id, token_type_ids=None, attention_mask=attention_mask)
         # prediction_scores = outputs[0] # [:2]
@@ -211,7 +211,7 @@ def tag_sentence_rects() :
     if 'tokens' not in sent_json.keys() or 'rects' not in sent_json.keys() :
         abort(400, 'Did not receive sentence data in POST request!')
 
-    print(sent_json)
+    # print(sent_json)
 
     words = sent_json['tokens']
     rects = sent_json['rects']
