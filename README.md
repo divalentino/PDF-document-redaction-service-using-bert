@@ -34,7 +34,7 @@ In the file `app.rect.py`, another API endpoint `/tag_sentence_rects` exists spe
 
 The notebook `pymupdf_annotation_testing.ipynb` provides a demonstration of how to use the `pymupdf` package to extract words (`tokens`) and bounding boxes (`rects`) for each word on the page, then pass them to the API for tagging. It also demonstrates how to propagate the resultant set of named entity tags back to the PDF as annotations using `pymupdf`.
 
-Furthermore, the notebook `pymupdf_redaction_testing.ipynb` leverages the `pymupdf` package's `addRedactAnnot` function to redact named entities in the text, while also adding EMA-style "PPD" formatting over top (i.e. blue boxes, black left-justified "PPD" text).
+Furthermore, the script `redact_document.py` leverages the `pymupdf` package's `addRedactAnnot` function to redact named entities in the text, while also adding EMA-style "PPD" formatting over top (i.e. blue boxes, black left-justified "PPD" text).
 
 
 ## Training your own model
